@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # Service de base de données
+  db:
+    image: postgres:15-alpine
+    container_name: codrive_db
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  # Service de ton application FastAPI
+  web:
+    build: .
+    container_name: codrive_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
