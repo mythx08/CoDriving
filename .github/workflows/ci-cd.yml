@@ -45,18 +45,13 @@ jobs:
       - name: Build de l'image Docker
         run: docker build -t codriving-app:${{ github.sha }} .
 
-      - name: Installation de Trivy CLI
+      - name: Installation et Scan Trivy
         run: |
-          sudo apt-get install wget apt-transport-https gnupg lsb-release -y
-          wget -qO - https://aquasecurity.github.io/trivy-repo/dabest.gpg | sudo apt-key add -
-          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install trivy -y
-
-      - name: Scan de l'image avec Trivy CLI
-        run: |
+          # Installation via le script officiel (plus robuste)
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          
+          # Exécution du scan
           trivy image --exit-code 1 --severity CRITICAL,HIGH --ignore-unfixed codriving-app:${{ github.sha }}
-
   # Job 3 : Validation de l'Infrastructure (Terraform)
   infrastructure-check:
     runs-on: ubuntu-latest
