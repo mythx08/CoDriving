@@ -29,12 +29,11 @@ jobs:
           pip install pytest httpx fastapi  # On force l'installation pour le runner
 
       - name: Exécution des Tests Unitaires
+        env:
+          TESTING: "true" # On active SQLite pour éviter l'erreur de connexion DB
         run: |
-          # On force le chemin absolu vers le dossier courant
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          # On lance pytest en lui disant exactement où regarder
           python -m pytest -v -p no:cacheprovider app/test_main.py
-
   # Job 2 : Sécurité des Conteneurs (Trivy)
   container-security:
     runs-on: ubuntu-latest
