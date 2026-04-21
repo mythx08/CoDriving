@@ -46,13 +46,15 @@ jobs:
         run: docker build -t codriving-app:${{ github.sha }} .
 
       - name: Scan Trivy (Vérification des failles)
-        uses: aquasec/trivy-action@0.20.0  # Utilisation d'une version stable
+        uses: aquasec/trivy-action@master
         with:
           image-ref: 'codriving-app:${{ github.sha }}'
           format: 'table'
           exit-code: '1'
-          ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
+        env:
+          TRIVY_SKIP_DB_UPDATE: true # Accélère le scan sur GitHub
+          TRIVY_SKIP_JAVA_DB_UPDATE: true
 
   # Job 3 : Validation de l'Infrastructure (Terraform)
   infrastructure-check:
