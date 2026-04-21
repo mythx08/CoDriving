@@ -19,17 +19,21 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Debug - Lister les fichiers
+        run: ls -R  # Cela nous permettra de voir si le dossier 'app' est bien là
+
       - name: Installation des dépendances
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install pytest httpx fastapi  # On force l'installation pour le runner
 
-      - name: Exécution des Tests Unitaires (Quota Check)
+      - name: Exécution des Tests Unitaires
         run: |
-          # On ajoute le dossier courant au chemin Python pour que 'app' soit reconnu
+          # On force le chemin absolu vers le dossier courant
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          # On désactive le cache pour éviter les erreurs de permission sur GitHub
-          python -m pytest -p no:cacheprovider app/test_main.py
+          # On lance pytest en lui disant exactement où regarder
+          python -m pytest -v -p no:cacheprovider app/test_main.py
 
   # Job 2 : Sécurité des Conteneurs (Trivy)
   container-security:
