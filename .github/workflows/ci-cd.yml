@@ -22,18 +22,16 @@ jobs:
       - name: Debug - Lister les fichiers
         run: ls -R  # Cela nous permettra de voir si le dossier 'app' est bien là
 
-      - name: Installation des dépendances
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest httpx fastapi  # On force l'installation pour le runner
+          pip install pytest httpx  # Au cas où ils manquent
 
-      - name: Exécution des Tests Unitaires
-        env:
-          TESTING: "true" # On active SQLite pour éviter l'erreur de connexion DB
+      - name: Run tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          python -m pytest -v -p no:cacheprovider app/test_main.py
+          pytest app/tests/test_main.py
   # Job 2 : Sécurité des Conteneurs (Trivy)
   container-security:
     runs-on: ubuntu-latest
