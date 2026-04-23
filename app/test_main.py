@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_all
+# Suppression de l'import erroné de create_all
 from app.main import app, get_db
 from app.database import Base
 from sqlalchemy import create_engine
