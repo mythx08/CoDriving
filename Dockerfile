@@ -1,20 +1,19 @@
-# 1. Utiliser une image Python légère (slim) pour réduire la taille et la surface d'attaque
 FROM python:3.11-slim
 
-# 2. Définir le dossier de travail
-WORKDIR /code
+WORKDIR /app
 
-# 3. Copier les dépendances et les installer
-COPY requirements.txt /code/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+# Installation des dépendances système pour compiler bcrypt et psycopg2
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    python3-dev \
+    musl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# 4. Copier le code de l'application
-COPY ./app /code/app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Sécurité : Créer un utilisateur "non-root"
-# En production, on ne fait jamais tourner un conteneur en mode administrateur (root)
-RUN useradd -m appuser
-USER appuser
+COPY . .
 
-# 6. Lancer le serveur uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# On lance uvicorn en mode module pour être plus sûr du PATH
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,41 +1,35 @@
-import logging
 from sqlalchemy.orm import Session
-from . import models, schemas
-from datetime import datetime, time
+from . import models, schemas, auth_utils
 
-# Récupération du logger configuré dans main.py
-logger = logging.getLogger("codrive")
+# --- LOGIQUE UTILISATEURS ---
 
-def get_user_daily_rides_count(db: Session, user_id: str):
-    today_min = datetime.combine(datetime.today(), time.min)
-    today_max = datetime.combine(datetime.today(), time.max)
-    
-    return db.query(models.Ride).filter(
-        models.Ride.user_id == user_id,
-        models.Ride.created_at >= today_min,
-        models.Ride.created_at <= today_max
-    ).count()
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()
 
-def create_ride(db: Session, ride: schemas.RideCreate, user_id: str):
-    # Vérification du quota
-    count = get_user_daily_rides_count(db, user_id)
+def create_user(db: Session, user: schemas.UserCreate):
+    # Hachage du mot de passe avant enregistrement
+    hashed_pwd = auth_utils.get_password_hash(user.password)
     
-    if count >= 4:
-        # LOG DE SÉCURITÉ : Très important pour le DevSecOps
-        logger.warning(f"SÉCURITÉ - QUOTA ATTEINT : L'utilisateur '{user_id}' a tenté de dépasser la limite de 4 trajets.")
-        return None
-    
-    # Création du trajet
-    db_ride = models.Ride(
-        **ride.model_dump(), 
-        user_id=user_id
+    db_user = models.User(
+        email=user.email,
+        hashed_password=hashed_pwd,
+        full_name=user.full_name
     )
     
-    db.add(db_ride)
+    db.add(db_user)
     db.commit()
-    db.refresh(db_ride)
-    
-    # LOG MÉTIER : On trace le succès
-    logger.info(f"MÉTIER - TRAJET CRÉÉ : Utilisateur '{user_id}' de {ride.departure_zone} vers {ride.destination_zone}")
-    
-    return db_ride
+    db.refresh(db_user)
+    return db_user
+
+# --- LOGIQUE TRAJETS (Gardée de la version précédente) ---
+
+def get_trips(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Trip).offset(skip).limit(limit).all()
+
+def create_trip(db: Session, trip: schemas.TripCreate, user_id: int):
+    # On lie maintenant le trajet à l'ID de l'utilisateur connecté
+    db_trip = models.Trip(**trip.model_dump(), owner_id=user_id)
+    db.add(db_trip)
+    db.commit()
+    db.refresh(db_trip)
+    return db_trip

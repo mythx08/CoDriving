@@ -1,19 +1,29 @@
-from sqlalchemy import Column, Integer, String, DateTime, Float
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from .database import Base
-import datetime
 
-class Ride(Base):
-    __tablename__ = "rides"
+class User(Base):
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String, index=True)  # Identifiant du conducteur
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    full_name = Column(String)
+    is_active = Column(Boolean, default=True)
     
-    # Zones au lieu de coordonnées GPS
-    departure_zone = Column(String, nullable=False) 
-    destination_zone = Column(String, nullable=False)
+    # func.now() utilise l'heure du serveur de DB
+    last_verified_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    trips = relationship("Trip", back_populates="owner")
+
+class Trip(Base):
+    __tablename__ = "trips"
+
+    id = Column(Integer, primary_key=True, index=True)
+    destination = Column(String, index=True)
+    date = Column(String)
     
-    price = Column(Float)
-    departure_time = Column(DateTime)
-    
-    # Pour le quota des 4 trajets/jour
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner = relationship("User", back_populates="trips")
