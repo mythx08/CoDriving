@@ -31,7 +31,7 @@ jobs:
       - name: Run tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          pytest app/tests/test_main.py
+          pytest app/test_main.py
   # Job 2 : Sécurité des Conteneurs (Trivy)
   container-security:
     runs-on: ubuntu-latest
