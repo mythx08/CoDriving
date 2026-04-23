@@ -29,9 +29,10 @@ jobs:
 
       - name: Run tests
         run: |
-          # On ajoute le répertoire actuel au PYTHONPATH pour que 'app' soit reconnu
           export PYTHONPATH=$PYTHONPATH:.
-          # On utilise python -m pour garantir que les imports relatifs fonctionnent
+          # Cette ligne va forcer l'affichage de l'erreur d'import s'il y en a une
+          python -c "from app.test_main import app; print('Import réussi')"
+          # Puis on lance les tests
           python -m pytest app/test_main.py
   # Job 2 : Sécurité des Conteneurs (Trivy)
   container-security:
