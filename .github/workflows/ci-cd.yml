@@ -29,10 +29,11 @@ jobs:
 
       - name: Run tests
         run: |
+          # On ajoute le dossier actuel au chemin
           export PYTHONPATH=$PYTHONPATH:.
-          # Cette ligne va forcer l'affichage de l'erreur d'import s'il y en a une
-          python -c "from app.test_main import app; print('Import réussi')"
-          # Puis on lance les tests
+          # On définit l'URL de la base pour SQLite (évite de chercher l'hôte "db")
+          export DATABASE_URL=sqlite:///./test_temp.db
+          # On lance pytest
           python -m pytest app/test_main.py
   # Job 2 : Sécurité des Conteneurs (Trivy)
   container-security:

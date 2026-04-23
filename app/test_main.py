@@ -1,26 +1,22 @@
 import pytest
 from fastapi.testclient import TestClient
-# Suppression de l'import erroné de create_all
 from app.main import app, get_db
-from app.database import Base
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from app.database import Base, engine, SessionLocal
 
-# Configuration d'une base de données de test en mémoire (SQLite)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_temp.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# On force la création des tables SQLite pour le test
+Base.metadata.create_all(bind=engine)
 
-# Override de la dépendance DB pour les tests
+# Override pour utiliser la session de test
 def override_get_db():
+    db = SessionLocal()
     try:
-        db = TestingSessionLocal()
         yield db
     finally:
         db.close()
 
 app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
+
 
 @pytest.fixture(autouse=True)
 def setup_database():

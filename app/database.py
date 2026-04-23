@@ -1,25 +1,19 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-# On vérifie si on est en train de tester
-IS_TESTING = os.getenv("TESTING", "false").lower() == "true"
+# 1. On récupère l'URL depuis l'environnement, sinon SQLite par défaut
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test_temp.db")
 
-if IS_TESTING:
-    # Base de données temporaire en mémoire pour les tests GitHub
-    SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+# 2. Configuration du moteur (adaptée selon la DB)
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    # check_same_thread est nécessaire uniquement pour SQLite
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    )
 else:
-    # Ta config PostgreSQL habituelle
-    SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db:5432/codrive")
     engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
